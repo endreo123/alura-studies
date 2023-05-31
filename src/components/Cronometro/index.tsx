@@ -3,27 +3,44 @@ import { Relogio } from "./Relogio"
 import style from './Cronometro.module.scss'
 import { DateUtils } from "../../common/utils/date"
 import { ITarefas } from "../../interfaces/tarefas"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface Props{
-    selecionado: ITarefas | undefined
+    selecionado: ITarefas | undefined,
+    finalizarTarefa: () => void
 }
 
-export const Cronometro = ({selecionado}: Props) => {
+export const Cronometro = ({selecionado, finalizarTarefa}: Props) => {
     const [tempo, setTempo] = useState<number>()
+
+    useEffect(()=>{
+        if( selecionado?.tempo){
+            setTempo(DateUtils.tempoParaSegundos(selecionado.tempo)); 
+        }
+    },[selecionado])
     
-    if( selecionado?.tempo) {
-        setTempo(DateUtils.tempoParaSegundos(selecionado.tempo))
+    const regressiva = (contador: number = 0) => {
+        setTimeout(() => {
+            if(contador > 0){
+                setTempo(contador - 1)
+                return regressiva(contador -1);
+            }
+            finalizarTarefa();
+        }, 1000)
     }
-    
+
+    const comecarContagem = () => {
+        regressiva(tempo)
+    }
+
     return (
         <div className={style.cronometro}>
             <p className={style.titulo}>Escolha um card e inicie o cronômetro</p>
-            Tempo: {tempo}
             <div className={style.relogioWrapper}>
-                <Relogio />
+                <Relogio tempo={tempo}/>
             </div>
             <Botao 
+                onClick={comecarContagem}
                 texto="Começar!"
             />
         </div>
